@@ -1,0 +1,666 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Team {
+  teamId                                       Int                   @id(map: "pk_team") @default(autoincrement()) @map("team_id")
+  name                                         String                @unique(map: "uk_team_name") @db.VarChar(150)
+  shortName                                    String?               @unique(map: "uk_team_short_name") @map("short_name") @db.VarChar(50)
+  status                                       Boolean               @default(true)
+  registrationDate                             DateTime              @default(now()) @map("registration_date") @db.Timestamptz(6)
+  updateDate                                   DateTime?             @updatedAt @map("update_date") @db.Timestamptz(6)
+  code                                         String?               @unique(map: "uk_team_code", where: raw("(code IS NOT NULL)")) @db.VarChar(30)
+  logoUrl                                      String?               @map("logo_url")
+  primaryColor                                 String?               @map("primary_color") @db.VarChar(20)
+  secondaryColor                               String?               @map("secondary_color") @db.VarChar(20)
+  foundationDate                               DateTime?             @map("foundation_date") @db.Date
+  description                                  String?               @db.VarChar(500)
+  fkHomeField                                  Int?                  @map("fk_home_field")
+  delegate_team                                delegate_team?
+  gallery_album                                gallery_album[]
+  match_event                                  match_event[]
+  match_lineup                                 match_lineup[]
+  payment                                      payment[]
+  player                                       player[]
+  soccer_match_soccer_match_fk_away_teamToteam soccer_match[]        @relation("soccer_match_fk_away_teamToteam")
+  soccer_match_soccer_match_fk_home_teamToteam soccer_match[]        @relation("soccer_match_fk_home_teamToteam")
+  field                                        field?                @relation(fields: [fkHomeField], references: [field_id], map: "fk_team_home_field")
+  team_coach                                   team_coach[]
+  tournament_standing                          tournament_standing[]
+  tournament_team                              tournament_team[]
+  
+  @@index([fkHomeField], map: "idx_team_home_field")
+  @@index([status], map: "idx_team_status")
+  @@map("team")
+}
+
+model audit_log {
+  audit_log_id      BigInt   @id(map: "pk_audit_log") @default(autoincrement())
+  fk_user           Int?
+  action            String   @db.VarChar(30)
+  entity_name       String   @db.VarChar(100)
+  entity_id         String?  @db.VarChar(100)
+  old_values        Json?
+  new_values        Json?
+  ip_address        String?  @db.Inet
+  user_agent        String?
+  registration_date DateTime @default(now()) @db.Timestamptz(6)
+  users             users?   @relation(fields: [fk_user], references: [user_id], map: "fk_audit_log_user")
+
+  @@index([registration_date(sort: Desc)], map: "idx_audit_log_date")
+  @@index([entity_name, entity_id], map: "idx_audit_log_entity")
+  @@index([fk_user], map: "idx_audit_log_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cat_position_type {
+  element_id        Int       @id(map: "pk_cat_position_type") @default(autoincrement())
+  code              String    @unique(map: "uk_cat_position_type_code") @db.VarChar(30)
+  description       String    @unique(map: "uk_cat_position_type_description") @db.VarChar(100)
+  sort_order        Int       @default(0)
+  status            Boolean   @default(true)
+  registration_date DateTime  @default(now()) @db.Timestamptz(6)
+  update_date       DateTime? @db.Timestamptz(6)
+  player            player[]
+
+  @@index([sort_order, description], map: "idx_cat_position_type_sort_order")
+  @@index([status], map: "idx_cat_position_type_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cat_user_type {
+  element_id        Int               @id(map: "pk_cat_user_type") @default(autoincrement())
+  code              String            @unique(map: "uk_cat_user_type_code") @db.VarChar(30)
+  description       String            @unique(map: "uk_cat_user_type_description") @db.VarChar(100)
+  sort_order        Int               @default(0)
+  status            Boolean           @default(true)
+  registration_date DateTime          @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?         @db.Timestamptz(6)
+  role_permission   role_permission[]
+  user_role         user_role[]
+  users             users[]
+
+  @@index([sort_order, description], map: "idx_cat_user_type_sort_order")
+  @@index([status], map: "idx_cat_user_type_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model category {
+  category_id       Int          @id(map: "pk_category") @default(autoincrement())
+  code              String       @unique(map: "uk_category_code") @db.VarChar(30)
+  name              String       @unique(map: "uk_category_name") @db.VarChar(100)
+  minimum_age       Int?         @db.SmallInt
+  maximum_age       Int?         @db.SmallInt
+  gender            String       @default("MIXTO") @db.VarChar(20)
+  description       String?      @db.VarChar(300)
+  status            Boolean      @default(true)
+  registration_date DateTime     @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?    @db.Timestamptz(6)
+  tournament        tournament[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model coach {
+  coach_id          Int          @id(map: "pk_coach") @default(autoincrement())
+  fk_person         Int          @unique(map: "uk_coach_person")
+  license_number    String?      @unique(map: "uk_coach_license") @db.VarChar(50)
+  license_category  String?      @db.VarChar(50)
+  experience_years  Int?         @db.SmallInt
+  status            Boolean      @default(true)
+  registration_date DateTime     @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?    @db.Timestamptz(6)
+  person            person       @relation(fields: [fk_person], references: [person_id], map: "fk_coach_person")
+  team_coach        team_coach[]
+}
+
+model delegate {
+  delegate_id       Int             @id(map: "pk_delegate") @default(autoincrement())
+  fk_person         Int             @unique(map: "uk_delegate_person")
+  credential_number String?         @unique(map: "uk_delegate_credential") @db.VarChar(50)
+  notes             String?         @db.VarChar(500)
+  status            Boolean         @default(true)
+  registration_date DateTime        @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?       @db.Timestamptz(6)
+  person            person          @relation(fields: [fk_person], references: [person_id], map: "fk_delegate_person")
+  delegate_team     delegate_team[]
+
+  @@index([fk_person], map: "idx_delegate_person")
+  @@index([status], map: "idx_delegate_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model delegate_team {
+  delegate_team_id  Int       @id(map: "pk_delegate_team") @default(autoincrement())
+  fk_delegate       Int
+  fk_team           Int       @unique(map: "ux_delegate_team_active_owner", where: raw("((status = true) AND (is_owner = true) AND (is_primary = true) AND (end_date IS NULL))"))
+  is_owner          Boolean   @default(true)
+  is_primary        Boolean   @default(true)
+  start_date        DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  end_date          DateTime? @db.Date
+  status            Boolean   @default(true)
+  registration_date DateTime  @default(now()) @db.Timestamptz(6)
+  update_date       DateTime? @db.Timestamptz(6)
+  delegate          delegate  @relation(fields: [fk_delegate], references: [delegate_id], map: "fk_delegate_team_delegate")
+  team              Team      @relation(fields: [fk_team], references: [teamId], map: "fk_delegate_team_team")
+
+  @@unique([fk_delegate, fk_team, start_date], map: "uk_delegate_team")
+  @@unique([fk_delegate, fk_team], map: "ux_delegate_team_active_relation", where: raw("((status = true) AND (end_date IS NULL))"))
+  @@index([fk_delegate], map: "idx_delegate_team_delegate")
+  @@index([status], map: "idx_delegate_team_status")
+  @@index([fk_team], map: "idx_delegate_team_team")
+}
+
+model event_type {
+  event_type_id     Int           @id(map: "pk_event_type") @default(autoincrement())
+  code              String        @unique(map: "uk_event_type_code") @db.VarChar(40)
+  name              String        @unique(map: "uk_event_type_name") @db.VarChar(100)
+  affects_score     Boolean       @default(false)
+  status            Boolean       @default(true)
+  registration_date DateTime      @default(now()) @db.Timestamptz(6)
+  match_event       match_event[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model fee_concept {
+  fee_concept_id    Int       @id(map: "pk_fee_concept") @default(autoincrement())
+  code              String    @unique(map: "uk_fee_concept_code") @db.VarChar(30)
+  name              String    @db.VarChar(120)
+  description       String?   @db.VarChar(300)
+  default_amount    Decimal?  @db.Decimal(12, 2)
+  applies_to        String    @default("EQUIPO") @db.VarChar(20)
+  status            Boolean   @default(true)
+  registration_date DateTime  @default(now()) @db.Timestamptz(6)
+  update_date       DateTime? @db.Timestamptz(6)
+  payment           payment[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model field {
+  field_id          Int            @id(map: "pk_field") @default(autoincrement())
+  code              String         @unique(map: "uk_field_code") @db.VarChar(30)
+  name              String         @unique(map: "uk_field_name") @db.VarChar(150)
+  address           String?        @db.VarChar(250)
+  latitude          Decimal?       @db.Decimal(10, 7)
+  longitude         Decimal?       @db.Decimal(10, 7)
+  surface_type      String?        @db.VarChar(50)
+  capacity          Int?
+  phone             String?        @db.VarChar(20)
+  schedule          String?        @db.VarChar(200)
+  description       String?        @db.VarChar(500)
+  image_url         String?
+  status            Boolean        @default(true)
+  registration_date DateTime       @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?      @db.Timestamptz(6)
+  soccer_match      soccer_match[]
+  team              Team[]
+}
+
+model gallery_album {
+  gallery_album_id  Int             @id(map: "pk_gallery_album") @default(autoincrement())
+  title             String          @db.VarChar(150)
+  description       String?         @db.VarChar(500)
+  fk_tournament     Int?
+  fk_team           Int?
+  cover_url         String?
+  publication_date  DateTime?       @db.Timestamptz(6)
+  public            Boolean         @default(true)
+  status            Boolean         @default(true)
+  registration_date DateTime        @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?       @db.Timestamptz(6)
+  team              Team?           @relation(fields: [fk_team], references: [teamId], map: "fk_gallery_album_team")
+  tournament        tournament?     @relation(fields: [fk_tournament], references: [tournament_id], map: "fk_gallery_album_tournament")
+  gallery_image     gallery_image[]
+
+  @@index([public, status], map: "idx_gallery_album_public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model gallery_image {
+  gallery_image_id  Int           @id(map: "pk_gallery_image") @default(autoincrement())
+  fk_gallery_album  Int
+  title             String?       @db.VarChar(150)
+  description       String?       @db.VarChar(300)
+  image_url         String
+  thumbnail_url     String?
+  display_order     Int           @default(0)
+  public            Boolean       @default(true)
+  status            Boolean       @default(true)
+  registration_date DateTime      @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?     @db.Timestamptz(6)
+  gallery_album     gallery_album @relation(fields: [fk_gallery_album], references: [gallery_album_id], onDelete: Cascade, map: "fk_gallery_image_album")
+
+  @@index([fk_gallery_album], map: "idx_gallery_image_album")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model match_event {
+  match_event_id                               Int          @id(map: "pk_match_event") @default(autoincrement())
+  fk_match                                     Int
+  fk_event_type                                Int
+  fk_team                                      Int
+  fk_player                                    Int?
+  fk_related_player                            Int?
+  minute                                       Int          @db.SmallInt
+  additional_minute                            Int          @default(0) @db.SmallInt
+  description                                  String?      @db.VarChar(500)
+  status                                       Boolean      @default(true)
+  registration_date                            DateTime     @default(now()) @db.Timestamptz(6)
+  update_date                                  DateTime?    @db.Timestamptz(6)
+  soccer_match                                 soccer_match @relation(fields: [fk_match], references: [match_id], onDelete: Cascade, map: "fk_match_event_match")
+  player_match_event_fk_playerToplayer         player?      @relation("match_event_fk_playerToplayer", fields: [fk_player], references: [player_id], map: "fk_match_event_player")
+  player_match_event_fk_related_playerToplayer player?      @relation("match_event_fk_related_playerToplayer", fields: [fk_related_player], references: [player_id], map: "fk_match_event_related_player")
+  team                                         Team         @relation(fields: [fk_team], references: [teamId], map: "fk_match_event_team")
+  event_type                                   event_type   @relation(fields: [fk_event_type], references: [event_type_id], map: "fk_match_event_type")
+
+  @@index([fk_match], map: "idx_match_event_match")
+  @@index([fk_player], map: "idx_match_event_player")
+  @@index([fk_event_type], map: "idx_match_event_type")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model match_lineup {
+  match_lineup_id   Int          @id(map: "pk_match_lineup") @default(autoincrement())
+  fk_match          Int
+  fk_team           Int
+  fk_player         Int
+  starter           Boolean      @default(false)
+  captain           Boolean      @default(false)
+  jersey_number     String?      @db.VarChar(10)
+  position_name     String?      @db.VarChar(50)
+  minute_in         Int?         @db.SmallInt
+  minute_out        Int?         @db.SmallInt
+  status            Boolean      @default(true)
+  registration_date DateTime     @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?    @db.Timestamptz(6)
+  soccer_match      soccer_match @relation(fields: [fk_match], references: [match_id], onDelete: Cascade, map: "fk_match_lineup_match")
+  player            player       @relation(fields: [fk_player], references: [player_id], map: "fk_match_lineup_player")
+  team              Team         @relation(fields: [fk_team], references: [teamId], map: "fk_match_lineup_team")
+
+  @@unique([fk_match, fk_team, fk_player], map: "uk_match_lineup")
+  @@unique([fk_match, fk_team, jersey_number], map: "uk_match_lineup_jersey", where: raw("((jersey_number IS NOT NULL) AND (status = true))"))
+}
+
+model match_referee {
+  match_referee_id  Int          @id(map: "pk_match_referee") @default(autoincrement())
+  fk_match          Int
+  fk_referee        Int
+  referee_role      String       @default("CENTRAL") @db.VarChar(30)
+  status            Boolean      @default(true)
+  registration_date DateTime     @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?    @db.Timestamptz(6)
+  soccer_match      soccer_match @relation(fields: [fk_match], references: [match_id], onDelete: Cascade, map: "fk_match_referee_match")
+  referee           referee      @relation(fields: [fk_referee], references: [referee_id], map: "fk_match_referee_referee")
+
+  @@unique([fk_match, fk_referee, referee_role], map: "uk_match_referee")
+}
+
+model match_status {
+  match_status_id   Int            @id(map: "pk_match_status") @default(autoincrement())
+  code              String         @unique(map: "uk_match_status_code") @db.VarChar(30)
+  name              String         @unique(map: "uk_match_status_name") @db.VarChar(100)
+  status            Boolean        @default(true)
+  registration_date DateTime       @default(now()) @db.Timestamptz(6)
+  soccer_match      soccer_match[]
+}
+
+model notification {
+  notification_id   Int       @id(map: "pk_notification") @default(autoincrement())
+  fk_user           Int
+  title             String    @db.VarChar(150)
+  message           String    @db.VarChar(800)
+  notification_type String    @default("INFORMACION") @db.VarChar(40)
+  related_entity    String?   @db.VarChar(60)
+  related_entity_id Int?
+  read              Boolean   @default(false)
+  read_date         DateTime? @db.Timestamptz(6)
+  status            Boolean   @default(true)
+  registration_date DateTime  @default(now()) @db.Timestamptz(6)
+  users             users     @relation(fields: [fk_user], references: [user_id], onDelete: Cascade, map: "fk_notification_user")
+
+  @@index([fk_user, read, registration_date(sort: Desc)], map: "idx_notification_user_read")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payment {
+  payment_id        Int         @id(map: "pk_payment") @default(autoincrement())
+  fk_fee_concept    Int
+  fk_tournament     Int?
+  fk_team           Int?
+  fk_player         Int?
+  amount            Decimal     @db.Decimal(12, 2)
+  payment_date      DateTime    @default(now()) @db.Timestamptz(6)
+  payment_method    String      @db.VarChar(30)
+  reference         String?     @db.VarChar(100)
+  receipt_url       String?
+  notes             String?     @db.VarChar(500)
+  payment_status    String      @default("PAGADO") @db.VarChar(30)
+  fk_registered_by  Int?
+  status            Boolean     @default(true)
+  registration_date DateTime    @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?   @db.Timestamptz(6)
+  fee_concept       fee_concept @relation(fields: [fk_fee_concept], references: [fee_concept_id], map: "fk_payment_fee_concept")
+  player            player?     @relation(fields: [fk_player], references: [player_id], map: "fk_payment_player")
+  users             users?      @relation(fields: [fk_registered_by], references: [user_id], map: "fk_payment_registered_by")
+  team              Team?       @relation(fields: [fk_team], references: [teamId], map: "fk_payment_team")
+  tournament        tournament? @relation(fields: [fk_tournament], references: [tournament_id], map: "fk_payment_tournament")
+
+  @@index([payment_date], map: "idx_payment_date")
+  @@index([fk_player], map: "idx_payment_player")
+  @@index([fk_team], map: "idx_payment_team")
+}
+
+model permission {
+  permission_id     Int               @id(map: "pk_permission") @default(autoincrement())
+  code              String            @unique(map: "uk_permission_code") @db.VarChar(100)
+  name              String            @db.VarChar(150)
+  description       String?           @db.VarChar(300)
+  module            String            @db.VarChar(80)
+  status            Boolean           @default(true)
+  registration_date DateTime          @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?         @db.Timestamptz(6)
+  role_permission   role_permission[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model person {
+  person_id         Int       @id(map: "pk_person") @default(autoincrement())
+  first_name        String    @db.VarChar(100)
+  last_name         String    @db.VarChar(100)
+  second_last_name  String?   @db.VarChar(100)
+  birth_date        DateTime? @db.Date
+  gender            String?   @db.VarChar(20)
+  curp              String?   @unique(map: "uk_person_curp") @db.VarChar(18)
+  rfc               String?   @db.VarChar(13)
+  email             String?   @unique(map: "uk_person_email") @db.VarChar(150)
+  phone             String?   @db.VarChar(20)
+  address           String?   @db.VarChar(250)
+  status            Boolean   @default(true)
+  registration_date DateTime  @default(now()) @db.Timestamptz(6)
+  update_date       DateTime? @db.Timestamptz(6)
+  coach             coach?
+  delegate          delegate?
+  player            player?
+  referee           referee?
+  users             users?
+
+  @@index([last_name, second_last_name, first_name], map: "idx_person_name")
+  @@index([status], map: "idx_person_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model player {
+  player_id                                         Int                 @id(map: "pk_player") @default(autoincrement())
+  fk_person                                         Int                 @unique(map: "uk_player_person")
+  fk_team                                           Int?
+  fk_position_type                                  Int?
+  jersey_number                                     String?             @db.VarChar(10)
+  dominant_foot                                     String?             @db.VarChar(15)
+  height_cm                                         Decimal?            @db.Decimal(5, 2)
+  weight_kg                                         Decimal?            @db.Decimal(5, 2)
+  medical_notes                                     String?             @db.VarChar(500)
+  status                                            Boolean             @default(true)
+  registration_date                                 DateTime            @default(now()) @db.Timestamptz(6)
+  update_date                                       DateTime?           @db.Timestamptz(6)
+  match_event_match_event_fk_playerToplayer         match_event[]       @relation("match_event_fk_playerToplayer")
+  match_event_match_event_fk_related_playerToplayer match_event[]       @relation("match_event_fk_related_playerToplayer")
+  match_lineup                                      match_lineup[]
+  payment                                           payment[]
+  person                                            person              @relation(fields: [fk_person], references: [person_id], map: "fk_player_person")
+  cat_position_type                                 cat_position_type?  @relation(fields: [fk_position_type], references: [element_id], onDelete: Restrict, map: "fk_player_position_type")
+  team                                              Team?               @relation(fields: [fk_team], references: [teamId], map: "fk_player_team")
+  tournament_player                                 tournament_player[]
+
+  @@index([fk_position_type], map: "idx_player_position_type")
+  @@index([status], map: "idx_player_status")
+  @@index([fk_team], map: "idx_player_team")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model referee {
+  referee_id        Int             @id(map: "pk_referee") @default(autoincrement())
+  fk_person         Int             @unique(map: "uk_referee_person")
+  license_number    String?         @unique(map: "uk_referee_license") @db.VarChar(50)
+  category          String?         @db.VarChar(50)
+  experience_years  Int?            @db.SmallInt
+  status            Boolean         @default(true)
+  registration_date DateTime        @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?       @db.Timestamptz(6)
+  match_referee     match_referee[]
+  person            person          @relation(fields: [fk_person], references: [person_id], map: "fk_referee_person")
+}
+
+model role_permission {
+  role_permission_id Int           @id(map: "pk_role_permission") @default(autoincrement())
+  fk_user_type       Int
+  fk_permission      Int
+  status             Boolean       @default(true)
+  registration_date  DateTime      @default(now()) @db.Timestamptz(6)
+  update_date        DateTime?     @db.Timestamptz(6)
+  permission         permission    @relation(fields: [fk_permission], references: [permission_id], onDelete: Cascade, map: "fk_role_permission_permission")
+  cat_user_type      cat_user_type @relation(fields: [fk_user_type], references: [element_id], onDelete: Cascade, map: "fk_role_permission_user_type")
+
+  @@unique([fk_user_type, fk_permission], map: "uk_role_permission")
+  @@index([fk_permission], map: "idx_role_permission_permission")
+  @@index([fk_user_type], map: "idx_role_permission_role")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model soccer_match {
+  match_id                             Int               @id(map: "pk_soccer_match") @default(autoincrement())
+  fk_tournament                        Int
+  fk_tournament_round                  Int?
+  fk_home_team                         Int
+  fk_away_team                         Int
+  fk_field                             Int?
+  fk_match_status                      Int
+  scheduled_date                       DateTime          @db.Timestamptz(6)
+  actual_start_date                    DateTime?         @db.Timestamptz(6)
+  actual_end_date                      DateTime?         @db.Timestamptz(6)
+  home_score                           Int?              @db.SmallInt
+  away_score                           Int?              @db.SmallInt
+  home_penalty_score                   Int?              @db.SmallInt
+  away_penalty_score                   Int?              @db.SmallInt
+  attendance                           Int?
+  notes                                String?
+  status                               Boolean           @default(true)
+  registration_date                    DateTime          @default(now()) @db.Timestamptz(6)
+  update_date                          DateTime?         @db.Timestamptz(6)
+  match_event                          match_event[]
+  match_lineup                         match_lineup[]
+  match_referee                        match_referee[]
+  team_soccer_match_fk_away_teamToteam Team              @relation("soccer_match_fk_away_teamToteam", fields: [fk_away_team], references: [teamId], map: "fk_soccer_match_away_team")
+  field                                field?            @relation(fields: [fk_field], references: [field_id], map: "fk_soccer_match_field")
+  team_soccer_match_fk_home_teamToteam Team              @relation("soccer_match_fk_home_teamToteam", fields: [fk_home_team], references: [teamId], map: "fk_soccer_match_home_team")
+  tournament_round                     tournament_round? @relation(fields: [fk_tournament_round], references: [tournament_round_id], map: "fk_soccer_match_round")
+  match_status                         match_status      @relation(fields: [fk_match_status], references: [match_status_id], map: "fk_soccer_match_status")
+  tournament                           tournament        @relation(fields: [fk_tournament], references: [tournament_id], map: "fk_soccer_match_tournament")
+
+  @@index([fk_away_team], map: "idx_soccer_match_away_team")
+  @@index([fk_home_team], map: "idx_soccer_match_home_team")
+  @@index([fk_tournament_round], map: "idx_soccer_match_round")
+  @@index([scheduled_date], map: "idx_soccer_match_scheduled_date")
+  @@index([fk_tournament], map: "idx_soccer_match_tournament")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model team_coach {
+  team_coach_id     Int       @id(map: "pk_team_coach") @default(autoincrement())
+  fk_team           Int
+  fk_coach          Int
+  coach_type        String    @default("PRINCIPAL") @db.VarChar(30)
+  start_date        DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  end_date          DateTime? @db.Date
+  status            Boolean   @default(true)
+  registration_date DateTime  @default(now()) @db.Timestamptz(6)
+  update_date       DateTime? @db.Timestamptz(6)
+  coach             coach     @relation(fields: [fk_coach], references: [coach_id], map: "fk_team_coach_coach")
+  team              Team      @relation(fields: [fk_team], references: [teamId], onDelete: Cascade, map: "fk_team_coach_team")
+
+  @@unique([fk_team, fk_coach, start_date], map: "uk_team_coach")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tournament {
+  tournament_id           Int                   @id(map: "pk_tournament") @default(autoincrement())
+  code                    String                @unique(map: "uk_tournament_code") @db.VarChar(30)
+  name                    String                @db.VarChar(150)
+  season                  String                @db.VarChar(50)
+  fk_category             Int
+  fk_tournament_format    Int
+  start_date              DateTime              @db.Date
+  end_date                DateTime?             @db.Date
+  registration_start_date DateTime?             @db.Date
+  registration_end_date   DateTime?             @db.Date
+  max_teams               Int?                  @db.SmallInt
+  points_win              Int                   @default(3) @db.SmallInt
+  points_draw             Int                   @default(1) @db.SmallInt
+  points_loss             Int                   @default(0) @db.SmallInt
+  description             String?               @db.VarChar(500)
+  image_url               String?
+  status                  Boolean               @default(true)
+  registration_date       DateTime              @default(now()) @db.Timestamptz(6)
+  update_date             DateTime?             @db.Timestamptz(6)
+  gallery_album           gallery_album[]
+  payment                 payment[]
+  soccer_match            soccer_match[]
+  category                category              @relation(fields: [fk_category], references: [category_id], map: "fk_tournament_category")
+  tournament_format       tournament_format     @relation(fields: [fk_tournament_format], references: [tournament_format_id], map: "fk_tournament_format")
+  tournament_round        tournament_round[]
+  tournament_standing     tournament_standing[]
+  tournament_team         tournament_team[]
+
+  @@unique([name, season], map: "uk_tournament_name_season")
+  @@index([fk_category], map: "idx_tournament_category")
+  @@index([start_date, end_date], map: "idx_tournament_dates")
+  @@index([status], map: "idx_tournament_status")
+}
+
+model tournament_format {
+  tournament_format_id Int          @id(map: "pk_tournament_format") @default(autoincrement())
+  code                 String       @unique(map: "uk_tournament_format_code") @db.VarChar(30)
+  name                 String       @unique(map: "uk_tournament_format_name") @db.VarChar(100)
+  description          String?      @db.VarChar(300)
+  status               Boolean      @default(true)
+  registration_date    DateTime     @default(now()) @db.Timestamptz(6)
+  tournament           tournament[]
+}
+
+model tournament_player {
+  tournament_player_id Int             @id(map: "pk_tournament_player") @default(autoincrement())
+  fk_tournament_team   Int
+  fk_player            Int
+  jersey_number        String?         @db.VarChar(10)
+  registration_status  String          @default("REGISTRADO") @db.VarChar(30)
+  registration_date    DateTime        @default(now()) @db.Timestamptz(6)
+  approval_date        DateTime?       @db.Timestamptz(6)
+  status               Boolean         @default(true)
+  update_date          DateTime?       @db.Timestamptz(6)
+  player               player          @relation(fields: [fk_player], references: [player_id], map: "fk_tournament_player_player")
+  tournament_team      tournament_team @relation(fields: [fk_tournament_team], references: [tournament_team_id], onDelete: Cascade, map: "fk_tournament_player_team")
+
+  @@unique([fk_tournament_team, fk_player], map: "uk_tournament_player")
+  @@unique([fk_tournament_team, jersey_number], map: "uk_tournament_player_jersey", where: raw("((jersey_number IS NOT NULL) AND (status = true))"))
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tournament_round {
+  tournament_round_id Int            @id(map: "pk_tournament_round") @default(autoincrement())
+  fk_tournament       Int
+  round_number        Int            @db.SmallInt
+  name                String?        @db.VarChar(100)
+  start_date          DateTime?      @db.Date
+  end_date            DateTime?      @db.Date
+  status              Boolean        @default(true)
+  registration_date   DateTime       @default(now()) @db.Timestamptz(6)
+  update_date         DateTime?      @db.Timestamptz(6)
+  soccer_match        soccer_match[]
+  tournament          tournament     @relation(fields: [fk_tournament], references: [tournament_id], onDelete: Cascade, map: "fk_tournament_round_tournament")
+
+  @@unique([fk_tournament, round_number], map: "uk_tournament_round")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tournament_standing {
+  tournament_standing_id Int        @id(map: "pk_tournament_standing") @default(autoincrement())
+  fk_tournament          Int
+  fk_team                Int
+  played                 Int        @default(0) @db.SmallInt
+  won                    Int        @default(0) @db.SmallInt
+  drawn                  Int        @default(0) @db.SmallInt
+  lost                   Int        @default(0) @db.SmallInt
+  goals_for              Int        @default(0) @db.SmallInt
+  goals_against          Int        @default(0) @db.SmallInt
+  goal_difference        Int        @default(0) @db.SmallInt
+  points                 Int        @default(0) @db.SmallInt
+  position               Int?       @db.SmallInt
+  update_date            DateTime   @default(now()) @db.Timestamptz(6)
+  team                   Team       @relation(fields: [fk_team], references: [teamId], onDelete: Cascade, map: "fk_tournament_standing_team")
+  tournament             tournament @relation(fields: [fk_tournament], references: [tournament_id], onDelete: Cascade, map: "fk_tournament_standing_tournament")
+
+  @@unique([fk_tournament, fk_team], map: "uk_tournament_standing")
+}
+
+model tournament_team {
+  tournament_team_id  Int                 @id(map: "pk_tournament_team") @default(autoincrement())
+  fk_tournament       Int
+  fk_team             Int
+  group_name          String?             @db.VarChar(20)
+  seed_number         Int?                @db.SmallInt
+  registration_status String              @default("REGISTRADO") @db.VarChar(30)
+  registration_date   DateTime            @default(now()) @db.Timestamptz(6)
+  approval_date       DateTime?           @db.Timestamptz(6)
+  status              Boolean             @default(true)
+  update_date         DateTime?           @db.Timestamptz(6)
+  tournament_player   tournament_player[]
+  team                Team                @relation(fields: [fk_team], references: [teamId], map: "fk_tournament_team_team")
+  tournament          tournament          @relation(fields: [fk_tournament], references: [tournament_id], onDelete: Cascade, map: "fk_tournament_team_tournament")
+
+  @@unique([fk_tournament, fk_team], map: "uk_tournament_team")
+  @@index([fk_team], map: "idx_tournament_team_team")
+  @@index([fk_tournament], map: "idx_tournament_team_tournament")
+}
+
+model user_role {
+  user_role_id      Int           @id(map: "pk_user_role") @default(autoincrement())
+  fk_user           Int
+  fk_user_type      Int
+  status            Boolean       @default(true)
+  registration_date DateTime      @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?     @db.Timestamptz(6)
+  users             users         @relation(fields: [fk_user], references: [user_id], onDelete: Cascade, map: "fk_user_role_user")
+  cat_user_type     cat_user_type @relation(fields: [fk_user_type], references: [element_id], map: "fk_user_role_user_type")
+
+  @@unique([fk_user, fk_user_type], map: "uk_user_role")
+  @@index([status], map: "idx_user_role_status")
+  @@index([fk_user_type], map: "idx_user_role_type")
+  @@index([fk_user], map: "idx_user_role_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  user_id           Int            @id(map: "pk_users") @default(autoincrement())
+  fk_person         Int            @unique(map: "uk_users_person")
+  fk_user_type      Int?
+  username          String         @unique(map: "uk_users_username") @db.VarChar(50)
+  password          String
+  last_login        DateTime?      @db.Timestamptz(6)
+  failed_attempts   Int            @default(0) @db.SmallInt
+  locked_until      DateTime?      @db.Timestamptz(6)
+  status            Boolean        @default(true)
+  registration_date DateTime       @default(now()) @db.Timestamptz(6)
+  update_date       DateTime?      @db.Timestamptz(6)
+  audit_log         audit_log[]
+  notification      notification[]
+  payment           payment[]
+  user_role         user_role[]
+  person            person         @relation(fields: [fk_person], references: [person_id], map: "fk_users_person")
+  cat_user_type     cat_user_type? @relation(fields: [fk_user_type], references: [element_id], onDelete: Restrict, map: "fk_users_user_type")
+
+  @@index([status], map: "idx_users_status")
+  @@index([fk_user_type], map: "idx_users_user_type")
+}
