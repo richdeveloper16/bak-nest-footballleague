@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserTypeRepository } from './repository/user-type.repository';
 import type { CreateCatalogDto } from '../../common/catalog/dto/create-catalog.dto';
 import type { CatalogResponseDto } from '../../common/catalog/dto/catalog-response.dto';
@@ -9,8 +9,6 @@ import { CatalogMapper } from '../../common/catalog/mapper/catalog.mapper';
 
 @Injectable()
 export class UserTypeService {
-  private readonly logger = new Logger(UserTypeService.name);
-
   constructor(private readonly userTypeRepository: UserTypeRepository) {}
 
   async save(dto: CreateCatalogDto): Promise<CatalogResponseDto> {
