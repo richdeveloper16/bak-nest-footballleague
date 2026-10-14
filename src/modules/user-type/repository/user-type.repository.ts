@@ -7,18 +7,18 @@ import type {
 } from '../../../common/catalog/interfaces/catalog-repository.interface';
 import type { CreateCatalogDto } from '../../../common/catalog/dto/create-catalog.dto';
 import type { UpdateCatalogDto } from '../../../common/catalog/dto/update-catalog.dto';
-import type { CatalogSearchDto } from '../../../common/catalog/dto/catalog-search.dto';
+import type { CatalogFilterDto } from '../../../common/catalog/dto/catalog-filter.dto';
 
 @Injectable()
 export class UserTypeRepository implements CatalogRepositoryInterface<
   CreateCatalogDto,
   UpdateCatalogDto,
-  CatalogSearchDto,
+  CatalogFilterDto,
   cat_user_type,
   CatalogSearchResult<cat_user_type>
 > {
   constructor(private readonly prisma: PrismaService) {}
-  async findAll(filters: CatalogSearchDto): Promise<
+  async findAll(filters: CatalogFilterDto): Promise<
     CatalogSearchResult<{
       code: string;
       description: string;

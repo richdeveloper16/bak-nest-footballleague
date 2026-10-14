@@ -3,7 +3,7 @@ import { CreateCatalogDto } from 'src/common/catalog/dto/create-catalog.dto';
 import { CatalogMapper } from 'src/common/catalog/mapper/catalog.mapper';
 import { PositionTypeRepository } from './repository/position-type.repository';
 import { UpdateCatalogDto } from 'src/common/catalog/dto/update-catalog.dto';
-import { CatalogSearchDto } from 'src/common/catalog/dto/catalog-search.dto';
+import { CatalogFilterDto } from 'src/common/catalog/dto/catalog-filter.dto';
 import { CatalogListResponseDto } from 'src/common/catalog/dto/catalog-list-response.dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
@@ -21,7 +21,7 @@ export class PositionTypeService {
     return CatalogMapper.toResponse(entity);
   }
 
-  async findAll(filters: CatalogSearchDto): Promise<CatalogListResponseDto> {
+  async findAll(filters: CatalogFilterDto): Promise<CatalogListResponseDto> {
     const result = await this.positioTypeRepository.findAll(filters);
     return {
       items: CatalogMapper.toResponseList(result.items),

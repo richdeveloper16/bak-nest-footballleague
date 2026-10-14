@@ -4,7 +4,7 @@ import type {
   CatalogSearchResult,
 } from '../../../common/catalog/interfaces/catalog-repository.interface';
 import { UpdateCatalogDto } from 'src/common/catalog/dto/update-catalog.dto';
-import { CatalogSearchDto } from 'src/common/catalog/dto/catalog-search.dto';
+import { CatalogFilterDto } from 'src/common/catalog/dto/catalog-filter.dto';
 import { cat_position_type, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
@@ -13,7 +13,7 @@ import { Injectable } from '@nestjs/common';
 export class PositionTypeRepository implements CatalogRepositoryInterface<
   CreateCatalogDto,
   UpdateCatalogDto,
-  CatalogSearchDto,
+  CatalogFilterDto,
   cat_position_type,
   CatalogSearchResult<cat_position_type>
 > {
@@ -61,7 +61,7 @@ export class PositionTypeRepository implements CatalogRepositoryInterface<
     });
   }
   async findAll(
-    filters: CatalogSearchDto,
+    filters: CatalogFilterDto,
   ): Promise<CatalogSearchResult<cat_position_type>> {
     const {
       element_id,

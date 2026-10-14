@@ -3,7 +3,7 @@ import { UserTypeRepository } from './repository/user-type.repository';
 import type { CreateCatalogDto } from '../../common/catalog/dto/create-catalog.dto';
 import type { CatalogResponseDto } from '../../common/catalog/dto/catalog-response.dto';
 import type { UpdateCatalogDto } from '../../common/catalog/dto/update-catalog.dto';
-import type { CatalogSearchDto } from '../../common/catalog/dto/catalog-search.dto';
+import type { CatalogFilterDto } from '../../common/catalog/dto/catalog-filter.dto';
 import type { CatalogListResponseDto } from '../../common/catalog/dto/catalog-list-response.dto';
 import { CatalogMapper } from '../../common/catalog/mapper/catalog.mapper';
 
@@ -21,7 +21,7 @@ export class UserTypeService {
     return CatalogMapper.toResponse(entity);
   }
 
-  async findAll(filters: CatalogSearchDto): Promise<CatalogListResponseDto> {
+  async findAll(filters: CatalogFilterDto): Promise<CatalogListResponseDto> {
     const result = await this.userTypeRepository.findAll(filters);
     return {
       items: CatalogMapper.toResponseList(result.items),
