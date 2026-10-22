@@ -31,20 +31,6 @@ export class PersonFilterDto extends PaginationQueryDto {
   @MaxLength(100)
   last_name?: string;
 
-  @ApiPropertyOptional({ maxLength: 100, example: 'Hernandez' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  second_last_name?: string;
-
-  @ApiPropertyOptional({ format: 'date', example: '1990-05-20' })
-  @IsOptional()
-  @IsDateString(
-    { strict: true },
-    { message: 'birth_date debe ser una fecha válida' },
-  )
-  birth_date?: string;
-
   @ApiPropertyOptional({ maxLength: 20 })
   @IsOptional()
   @IsString()
@@ -74,12 +60,6 @@ export class PersonFilterDto extends PaginationQueryDto {
   @IsString()
   @MaxLength(150)
   email?: string;
-
-  @ApiPropertyOptional({ maxLength: 250 })
-  @IsOptional()
-  @IsString()
-  @MaxLength(250)
-  address?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

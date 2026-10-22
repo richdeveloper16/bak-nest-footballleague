@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsDateString,
   IsEmail,
@@ -23,9 +24,17 @@ export class CreatePersonDto {
   @IsString()
   second_last_name!: string;
 
-  @ApiPropertyOptional({ format: 'date', example: '1990-05-20' })
+  @ApiPropertyOptional({
+    description: 'Fecha de nacimiento en formato YYYY/MM/DD o YYYY-MM-DD.',
+    example: '1984/01/16',
+  })
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' && /^\d{4}\/\d{2}\/\d{2}$/.test(value)
+      ? value.replace(/\//g, '-')
+      : value,
+  )
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   birth_date!: string;
 
   @ApiProperty({ minLength: 3 })
@@ -38,10 +47,12 @@ export class CreatePersonDto {
   @IsString()
   curp!: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
   rfc!: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsEmail()
   email!: string;
@@ -51,6 +62,7 @@ export class CreatePersonDto {
   @IsString()
   phone!: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
   address!: string;
