@@ -2,7 +2,6 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type, type TransformFnParams } from 'class-transformer';
 import {
   IsBoolean,
-  IsDateString,
   IsInt,
   IsOptional,
   IsString,

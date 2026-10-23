@@ -33,7 +33,7 @@ model Team {
   team_coach                                   team_coach[]
   tournament_standing                          tournament_standing[]
   tournament_team                              tournament_team[]
-  
+
   @@index([fkHomeField], map: "idx_team_home_field")
   @@index([status], map: "idx_team_status")
   @@map("team")
@@ -196,8 +196,12 @@ model field {
   status            Boolean        @default(true)
   registration_date DateTime       @default(now()) @db.Timestamptz(6)
   update_date       DateTime?      @db.Timestamptz(6)
+  fk_branch         Int?
+  branch            branch?        @relation(fields: [fk_branch], references: [branch_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_field_branch")
   soccer_match      soccer_match[]
   team              Team[]
+
+  @@index([fk_branch], map: "idx_field_branch")
 }
 
 model gallery_album {
@@ -655,6 +659,7 @@ model users {
   registration_date DateTime       @default(now()) @db.Timestamptz(6)
   update_date       DateTime?      @db.Timestamptz(6)
   audit_log         audit_log[]
+  branch            branch[]
   notification      notification[]
   payment           payment[]
   user_role         user_role[]
@@ -663,4 +668,27 @@ model users {
 
   @@index([status], map: "idx_users_status")
   @@index([fk_user_type], map: "idx_users_user_type")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model branch {
+  branch_id         Int       @id(map: "pk_branch") @default(autoincrement())
+  code              String    @unique(map: "uk_branch_code") @db.VarChar(30)
+  name              String    @db.VarChar(150)
+  address           String?   @db.VarChar(250)
+  phone             String?   @db.VarChar(20)
+  email             String?   @db.VarChar(150)
+  fk_manager_user   Int?
+  latitude          Decimal?  @db.Decimal(10, 7)
+  longitude         Decimal?  @db.Decimal(10, 7)
+  schedule          String?   @db.VarChar(200)
+  description       String?   @db.VarChar(500)
+  status            Boolean   @default(true)
+  registration_date DateTime  @default(now()) @db.Timestamptz(6)
+  update_date       DateTime? @db.Timestamptz(6)
+  users             users?    @relation(fields: [fk_manager_user], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "fk_branch_manager_user")
+  field             field[]
+
+  @@index([fk_manager_user], map: "idx_branch_manager_user")
+  @@index([status], map: "idx_branch_status")
 }
